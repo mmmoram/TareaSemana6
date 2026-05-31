@@ -1,4 +1,4 @@
-// src/screens/auth/LoginScreen.tsx
+
 import React, { useState } from "react";
 import { View, Text, ScrollView, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -13,7 +13,7 @@ export const LoginScreen = ({ navigation }: any) => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  // Estado unificado usando la interfaz de TypeScript
+ 
   const [loginForm, setLoginForm] = useState<LoginForm>({
     email: "",
     password: "",

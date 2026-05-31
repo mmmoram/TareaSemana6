@@ -5,7 +5,7 @@ import { auth } from "../../config/firebase";
 import { loginStyles } from "../../styles/appStyle";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
-import { RegisterForm } from "../../types/auth"; // ¡Aquí usamos la interfaz de registro!
+import { RegisterForm } from "../../types/auth"; 
 import { isValidEmail, isValidPassword } from "../../utils/validators";
 
 export const RegisterScreen = ({ navigation }: any) => {
@@ -49,7 +49,7 @@ export const RegisterScreen = ({ navigation }: any) => {
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, registerForm.email, registerForm.password);
-      // Al registrarse, Firebase inicia sesión automáticamente y el AuthContext hará la redirección
+      // Al registro
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         Alert.alert("Error", "Este correo ya está registrado.");
