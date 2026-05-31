@@ -5,5 +5,5 @@ export type AuthStackParamList = {
 
 export type AppStackParamList = {
   Home: undefined;
-  Detail: { postId: number; title: string };
+  Detail: { id: string }; 
 };

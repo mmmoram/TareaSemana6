@@ -1,43 +1,25 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import { StackScreenProps } from "@react-navigation/stack";
-import { AuthStackParamList } from "../../navigation/typeNavigation";
-import {
-  isValidEmail,
-  isValidPassword,
-  passwordsMatch,
-} from "../../utils/validators";
-import { registerStyles } from "../../styles/appStyle";
+import { View, Text, ScrollView, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../config/firebase";
+import { loginStyles } from "../../styles/appStyle";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
-import { RegisterForm } from "../../types/auth";
+import { RegisterForm } from "../../types/auth"; // ¡Aquí usamos la interfaz de registro!
+import { isValidEmail, isValidPassword } from "../../utils/validators";
 
-type RegisterScreenNavigationProp = StackScreenProps<
-  AuthStackParamList,
-  "Register"
->;
-
-export const RegisterScreen = ({
-  navigation,
-}: RegisterScreenNavigationProp) => {
+export const RegisterScreen = ({ navigation }: any) => {
+  const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [confirmError, setConfirmError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const [registerForm, setRegisterForm] = useState<RegisterForm>({
     email: "",
     password: "",
-    confirmPassword: "",
+    confirmPassword: ""
   });
 
-  const handleInputChange = (key: string, value: string) => {
+  const handleInputChange = (key: keyof RegisterForm, value: string) => {
     setRegisterForm({ ...registerForm, [key]: value });
   };
 
@@ -45,76 +27,76 @@ export const RegisterScreen = ({
     let valid = true;
     setEmailError("");
     setPasswordError("");
-    setConfirmError("");
 
     if (!isValidEmail(registerForm.email)) {
       setEmailError("Ingresa un email válido");
       valid = false;
     }
     if (!isValidPassword(registerForm.password)) {
-      setPasswordError("Mínimo 6 caracteres");
+      setPasswordError("La contraseña debe tener al menos 6 caracteres");
       valid = false;
     }
-    if (!passwordsMatch(registerForm.password, registerForm.confirmPassword)) {
-      setConfirmError("Las contraseñas no coinciden");
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setPasswordError("Las contraseñas no coinciden");
       valid = false;
     }
     return valid;
   };
 
+  const handleRegister = async () => {
+    if (!validate()) return;
+    
+    setLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, registerForm.email, registerForm.password);
+      // Al registrarse, Firebase inicia sesión automáticamente y el AuthContext hará la redirección
+    } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert("Error", "Este correo ya está registrado.");
+      } else {
+        Alert.alert("Error", "Ocurrió un problema al registrar el usuario.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={registerStyles.container}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={registerStyles.header}>
-          <Text style={registerStyles.title}>Crear Cuenta</Text>
-          <Text style={registerStyles.subtitle}>Regístrate para comenzar</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView contentContainerStyle={loginStyles.container} keyboardShouldPersistTaps="handled">
+        <View style={loginStyles.header}>
+          <Text style={loginStyles.title}>Crear Cuenta</Text>
+          <Text style={loginStyles.subtitle}>Regístrate para comenzar</Text>
         </View>
 
-        <View style={registerStyles.form}>
-          <Input
-            label="Correo electrónico"
-            placeholder="ejemplo@correo.com"
-            value={registerForm.email}
-            onChangeText={(value) => handleInputChange("email", value)}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={emailError}
+        <View style={loginStyles.form}>
+          <Input 
+            label="Correo electrónico" 
+            value={registerForm.email} 
+            onChangeText={(val) => handleInputChange("email", val)} 
+            error={emailError} 
+            autoCapitalize="none" 
+            keyboardType="email-address" 
           />
-          <Input
-            label="Contraseña"
-            placeholder="Mínimo 6 caracteres"
-            value={registerForm.password}
-            onChangeText={(value) => handleInputChange("password", value)}
-            isPassword
-            error={passwordError}
+          <Input 
+            label="Contraseña" 
+            value={registerForm.password} 
+            onChangeText={(val) => handleInputChange("password", val)} 
+            error={passwordError} 
+            isPassword 
           />
-          <Input
-            label="Confirmar Contraseña"
-            placeholder="Repite tu contraseña"
-            value={registerForm.confirmPassword}
-            onChangeText={(value) => handleInputChange("confirmPassword", value)}
-            isPassword
-            error={confirmError}
+          <Input 
+            label="Confirmar Contraseña" 
+            value={registerForm.confirmPassword} 
+            onChangeText={(val) => handleInputChange("confirmPassword", val)} 
+            isPassword 
           />
-          <Button
-            title="Registrarse"
-            onPress={() => {}}
-            loading={loading}
-            style={registerStyles.button}
-          />
+          <Button title="Registrarse" onPress={handleRegister} loading={loading} style={loginStyles.button} />
         </View>
 
-        <View style={registerStyles.footer}>
-          <Text style={registerStyles.footerText}>¿Ya tienes cuenta? </Text>
-          <Text style={registerStyles.link} onPress={() => navigation.goBack()}>
-            Inicia Sesión
-          </Text>
+        <View style={loginStyles.footer}>
+          <Text style={loginStyles.footerText}>¿Ya tienes cuenta? </Text>
+          <Text style={loginStyles.link} onPress={() => navigation.navigate("Login")}>Inicia sesión</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
